@@ -1,7 +1,7 @@
 """Minimal evaluation adapter for the existing movie_rag Resource Assistant.
 
-Intentionally independent of src/movie_rag. Does not perform retrieval or access
-private ratings. Keep read-only retrieval results distinct from answer text.
+Query construction does not access private ratings. Evaluation delegates to the
+shared movie_rag recommendation evaluator. Keep read-only retrieval results distinct from answer text.
 """
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Callable
 
-import numpy as np
 import pandas as pd
 
 
@@ -148,72 +147,24 @@ def extract_rankings(state, *, catalog: set[int], shown: set[int],
             'response_missing':response is None}
 
 
-def score_rankings(predictions:pd.DataFrame, *, fixed:pd.DataFrame, extra:pd.DataFrame,
-                   private_profile:pd.DataFrame, positive_min=4.0, top_k=10,
+def score_rankings(predictions: pd.DataFrame, *, fixed: pd.DataFrame, extra: pd.DataFrame,
+                   private_profile: pd.DataFrame, positive_min=4.0, top_k=10,
                    expected_keys: pd.DataFrame | None = None) -> pd.DataFrame:
-    """Evaluate A/B only *after* ranking is computed. Fewer than K results are allowed.
+    """Compatibility adapter. New experiments use the shared evaluator directly.
 
-    Missing slots have zero gain. A: fixed 20; B: fixed + extra + unrevealed
-    part of 10-item profile. This function is NOT imported by the live executor.
+    Legacy callers explicitly declare completed empty runs through expected_keys.
+    V2 additionally supplies execution records to distinguish failures from empties.
     """
-    required={'scenario_id','k','model','movieId','rank'}
-    if not required.issubset(predictions.columns):
-        raise ValueError(f'Missing prediction columns: {required-set(predictions.columns)}')
-    truth={}
-    for name,src in [('F',fixed),('E',extra),('P',private_profile)]:
-        for sid,g in src.groupby('scenario_id'):
-            recs=[]
-            for row in g.itertuples(index=False):
-                recs.append((int(row.movieId),float(row.rating),int(row.reveal_order) if name=='P' else 0))
-            truth.setdefault(str(sid),{})[name]=recs
-    rows=[]
-    groups=list(predictions.groupby(['scenario_id','k','model']))
-    actual={tuple(x) for x in predictions[['scenario_id','k','model']].itertuples(index=False,name=None)}
+    from movie_rag.recommendation_benchmark import evaluate_rankings
+    records = None
     if expected_keys is not None:
-        expected={tuple(x) for x in expected_keys[['scenario_id','k','model']].itertuples(index=False,name=None)}
-        if not actual.issubset(expected):
-            raise ValueError('Unexpected scenario/k/model keys in ranking')
-        # An empty MCP retrieval is an observable result, not a missing experiment.
-        # It receives zero gain at every position; other baselines retain their rows.
-        for key in sorted(expected-actual):
-            groups.append((key, predictions.iloc[0:0].copy()))
-    for (sid,k,model),g in groups:
-        sid=str(sid); k=int(k); model=str(model)
-        ordered=g.sort_values('rank')
-        if len(ordered)>top_k or ordered.movieId.duplicated().any() or \
-                ordered['rank'].tolist()!=list(range(1,len(ordered)+1)):
-            raise ValueError(f'Malformed top-k for {sid}/{k}/{model}')
-        if sid not in truth:raise ValueError(f'Unknown scenario {sid}')
-        f=truth[sid].get('F',[])
-        e=truth[sid].get('E',[])
-        p=[entry for entry in truth[sid].get('P',[]) if entry[2]>k]
-        shown={entry[0] for entry in truth[sid].get('P',[]) if entry[2]<=k}
-        if set(ordered.movieId)&shown:raise ValueError(f'Revealed film recommended: {sid}, k={k}')
-        for scheme,records in [('A',f),('B',f+e+p)]:
-            pos={movie for movie,rating,_ in records if rating>=positive_min}
-            ids=ordered.movieId.astype(int).tolist()
-            labels=np.asarray([mid in pos for mid in ids],dtype=float)
-            npos=len(pos)
-            if npos:
-                discount=1/np.log2(np.arange(2,len(labels)+2))
-                ideal=(1/np.log2(np.arange(2,min(top_k,npos)+2))).sum()
-                ndcg=float((labels*discount).sum()/ideal)
-                recall=float(labels.sum()/npos)
-                hit=float(labels.sum()>0)
-            else:ndcg=recall=hit=float('nan')
-            rows.append({'scenario_id':sid,'k':k,'model':model,'scheme':scheme,
-                         'ndcg@10':ndcg,'recall@10':recall,'hr@10':hit,
-                         'n_relevant':npos,'n_returned':len(ids),'shortfall':top_k-len(ids),
-                         'n_unjudged_topk':sum(mid not in {v[0] for v in records} for mid in ids)})
-    out=pd.DataFrame(rows)
-    return out
+        records = expected_keys[['scenario_id', 'k', 'model']].copy()
+        records['status'] = 'completed'
+    return evaluate_rankings(predictions, fixed=fixed, extra=extra,
+                             private_profile=private_profile, positive_min=positive_min,
+                             top_k=top_k, expected_keys=expected_keys, run_records=records)
 
 
-def macro_by_user(per_scenario:pd.DataFrame, owners:Mapping[str,int]):
-    metrics=['ndcg@10','recall@10','hr@10','n_returned','shortfall','n_unjudged_topk']
-    df=per_scenario.copy()
-    df['userId']=df.scenario_id.map(owners)
-    if df.userId.isna().any():raise ValueError('Missing user mapping')
-    per_user=df.groupby(['userId','k','model','scheme'],as_index=False)[metrics].mean()
-    macro=per_user.groupby(['k','model','scheme'],as_index=False)[metrics].mean()
-    return per_user,macro
+def macro_by_user(per_scenario: pd.DataFrame, owners: Mapping[str, int]):
+    from movie_rag.recommendation_benchmark import macro_by_user as shared_macro
+    return shared_macro(per_scenario, owners)

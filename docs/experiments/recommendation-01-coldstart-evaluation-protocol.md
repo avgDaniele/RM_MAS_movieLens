@@ -1,3 +1,5 @@
+> **Versione precedente.** I notebook correnti implementano il [benchmark cold start v2](recommendation-coldstart-v2.md). Questo documento conserva configurazioni e percorsi storici.
+
 # Recommendation 01: protocollo sperimentale cold-start A/B
 
 > **Provenienza:** `README_recommendation_protocol(1).md` · **Tipo:** documentazione tecnica del progetto.

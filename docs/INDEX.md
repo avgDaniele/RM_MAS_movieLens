@@ -17,12 +17,13 @@ La documentazione è organizzata **per funzione**, non per ordine d’arrivo dei
 
 ## 3. Esperimenti di raccomandazione
 
+- [**Benchmark cold start v2 — guida attuale**](experiments/recommendation-coldstart-v2.md): protocollo condiviso, bug corretti, selezione B, nuovi embedding e verifiche sintetiche. I quattro documenti seguenti descrivono le versioni precedenti.
 - [**01 — Protocollo di valutazione cold-start**](experiments/recommendation-01-coldstart-evaluation-protocol.md): scenari e split; protocolli A/B.
 - [**02 — Baseline Popularity / Matrix Factorization / GTE**](experiments/recommendation-02-popularity-mf-gte-baselines.md): confronto semantico e collaborativo.
 - [**04 — Profilo semantico LLM + GTE**](experiments/recommendation-04-llm-semantic-profile-gte.md): fase 2A, senza dialogo LLM–LLM.
 - [**05 — Benchmark pipeline lineare LLM/MCP**](experiments/recommendation-05-linear-llm-mcp-benchmark.md): analisi dei ranking MCP e Answer separato.
 
-**La documentazione di `recommendation_03` non era tra i file consegnati.**
+La diagnostica `recommendation_03` corrente è descritta nella guida v2; non era inclusa nei README storici consegnati.
 
 ## 4. Storia tecnica
 

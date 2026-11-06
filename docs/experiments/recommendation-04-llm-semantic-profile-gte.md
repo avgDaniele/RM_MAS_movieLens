@@ -1,3 +1,5 @@
+> **Versione precedente.** I notebook correnti implementano il [benchmark cold start v2](recommendation-coldstart-v2.md). Questo documento conserva configurazioni e percorsi storici.
+
 # Recommendation 04: profilo semantico LLM → GTE (fase 2A)
 
 > **Provenienza:** `README_recommendation_04_fase_2A(1).md` · **Tipo:** documentazione tecnica del progetto.

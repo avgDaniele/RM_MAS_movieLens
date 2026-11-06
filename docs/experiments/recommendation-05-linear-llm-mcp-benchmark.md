@@ -1,3 +1,5 @@
+> **Versione precedente.** I notebook correnti implementano il [benchmark cold start v2](recommendation-coldstart-v2.md). Questo documento conserva configurazioni e percorsi storici.
+
 # Recommendation 05: benchmark della pipeline LLM/MCP lineare
 
 > **Provenienza:** `README_recommendation_05_pipeline_lineare_benchmark.md` · **Tipo:** documentazione tecnica del progetto.
