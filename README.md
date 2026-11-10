@@ -6,6 +6,8 @@ Documentazione di orientamento del progetto di tesi: un prototipo di **recommend
 
 ## Da dove partire
 
+Il benchmark di recommendation corrente è descritto nella [guida cold start v2](docs/experiments/recommendation-coldstart-v2.md). I notebook di recommendation ora delegano ai moduli condivisi; i documenti storici sotto mantengono il contesto delle versioni precedenti.
+
 | Cerco… | Documento |
 | --- | --- |
 | Una mappa di tutti i README, compresi i nomi originali | [Indice dei documenti](docs/INDEX.md) |

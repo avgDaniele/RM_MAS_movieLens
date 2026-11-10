@@ -51,7 +51,7 @@ class TestBenchmark(unittest.TestCase):
     def test_relevance_A_B_and_fewer_than_K(self):
         preds=pd.DataFrame({'scenario_id':['s']*2,'k':[1]*2,'model':['test']*2,
                             'movieId':[101,105],'rank':[1,2],'score':[.5,.1]})
-        fixed=pd.DataFrame({'scenario_id':['s']*20,'movieId':list(range(101,121)),
+        fixed=pd.DataFrame({'scenario_id':['s']*20,'movieId':[mid if mid != 105 else 125 for mid in range(101,121)],
                             'rating':[5]+[2]*19})
         extra=pd.DataFrame({'scenario_id':['s'],'movieId':[130],'rating':[5]})
         profile=pd.DataFrame({'scenario_id':['s']*10,'movieId':[201,105,203,204,205,206,207,208,209,210],

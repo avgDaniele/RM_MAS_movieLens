@@ -76,6 +76,34 @@
           "rerank": true
         }
       }
+    },
+    "movielens_coldstart_benchmark_v2": {
+      "profile_id": "movielens_coldstart_benchmark_v2",
+      "domain_id": "movielens_coldstart_v2",
+      "collection_name": "movies_rs_coldstart_v2_gte_no_interactions_v1",
+      "search_profile_id": "benchmark",
+      "vector_name": "dense",
+      "schema_version": "coldstart_no_interactions_v1",
+      "qdrant_url_env": "QDRANT_URL",
+      "qdrant_url_default": "http://localhost:6333",
+      "exact": true,
+      "encoder": {
+        "name": "gte_multilingual_base_dense",
+        "model_name": "Alibaba-NLP/gte-multilingual-base",
+        "dimension": 768,
+        "trust_remote_code": true,
+        "batch_size": 16,
+        "normalize_embeddings": true,
+        "max_seq_length": null,
+        "query_prompt_name": null
+      },
+      "search_profiles": {
+        "benchmark": {
+          "candidate_k": 30,
+          "final_k": 30,
+          "rerank": false
+        }
+      }
     }
   }
 }
